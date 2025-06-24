@@ -94,8 +94,6 @@ Navigate to the client folder:**
     npm run client: Start the React development server.
     npm run dev: Start both client and server with concurrent execution.
   
-# License
-This project is licensed under the ISC License.
 
 # Author
-Developed by Abhinav
+Developed by Harsh Maddheshiya
