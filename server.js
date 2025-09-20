@@ -2,7 +2,6 @@ import express from "express";
 import colors from "colors";
 import dotenv from "dotenv";
 import morgan from "morgan";
-import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoute.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -16,8 +15,7 @@ const __dirname = path.dirname(__filename);
 //configure env
 dotenv.config();
 
-//databse config
-connectDB();
+// Prisma will handle database access via `config/prisma.js`
 
 //rest object
 const app = express();

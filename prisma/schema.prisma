@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum OrderStatus {
+  NOT_PROCESS @map("Not Process")
+  PROCESSING  @map("Processing")
+  SHIPPED     @map("Shipped")
+  DELIVERD    @map("deliverd")
+  CANCEL      @map("cancel")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String
+  address   Json
+  answer    String
+  role      Int      @default(0)
+  orders    Order[]  @relation("BuyerOrders")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id    Int       @id @default(autoincrement())
+  name  String?
+  slug  String?   @db.VarChar(191)
+  products Product[]
+
+  @@map("Category")
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String
+  description String
+  price       Float
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  quantity    Int
+  photo       Bytes?
+  shipping    Boolean?
+  orders      OrderItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("Products")
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  products  OrderItem[]
+  payment   Json?
+  buyerId   Int?
+  buyer     User?       @relation("BuyerOrders", fields: [buyerId], references: [id])
+  status    OrderStatus @default(NOT_PROCESS)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("Order")
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  order     Order   @relation(fields: [orderId], references: [id])
+  orderId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int     @default(1)
+
+  @@map("OrderItem")
+}

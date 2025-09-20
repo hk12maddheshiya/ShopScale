@@ -1,6 +1,4 @@
-import productModel from "../models/productModel.js";
-import categoryModel from "../models/categoryModel.js";
-import orderModel from "../models/orderModel.js";
+import { prisma } from "../config/prisma.js";
 
 import fs from "fs";
 import slugify from "slugify";
@@ -40,12 +38,18 @@ export const createProductController = async (req, res) => {
           .send({ error: "photo is Required and should be less then 1mb" });
     }
 
-    const products = new productModel({ ...req.fields, slug: slugify(name) });
-    if (photo) {
-      products.photo.data = fs.readFileSync(photo.path);
-      products.photo.contentType = photo.type;
-    }
-    await products.save();
+    const products = await prisma.product.create({
+      data: {
+        name,
+        slug: slugify(name),
+        description,
+        price: Number(price),
+        quantity: Number(quantity),
+        categoryId: Number(category),
+        shipping: shipping === 'true' || shipping === true,
+        photo: photo ? fs.readFileSync(photo.path) : undefined
+      }
+    });
     res.status(201).send({
       success: true,
       message: "Product Created Successfully",
@@ -64,17 +68,29 @@ export const createProductController = async (req, res) => {
 //get all products
 export const getProductController = async (req, res) => {
   try {
-    const products = await productModel
-      .find({})
-      .populate("category")
-      .select("-photo")
-      .limit(12)
-      .sort({ createdAt: -1 });
+    const products = await prisma.product.findMany({
+      include: {
+        category: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        quantity: true,
+        shipping: true,
+        categoryId: true,
+        category: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
     res.status(200).send({
       success: true,
-      counTotal: products.length,
+      counTotal: sanitized.length,
       message: "ALlProducts ",
-      products,
+      products: sanitized,
     });
   } catch (error) {
     console.log(error);
@@ -88,10 +104,12 @@ export const getProductController = async (req, res) => {
 // get single product
 export const getSingleProductController = async (req, res) => {
   try {
-    const product = await productModel
-      .findOne({ slug: req.params.slug })
-      .select("-photo")
-      .populate("category");
+    const product = await prisma.product.findFirst({
+      where: { slug: req.params.slug },
+      include: {
+        category: true
+      }
+    });
     res.status(200).send({
       success: true,
       message: "Single Product Fetched",
@@ -110,10 +128,13 @@ export const getSingleProductController = async (req, res) => {
 // get photo
 export const productPhotoController = async (req, res) => {
   try {
-    const product = await productModel.findById(req.params.pid).select("photo");
-    if (product.photo.data) {
-      res.set("Content-type", product.photo.contentType);
-      return res.status(200).send(product.photo.data);
+    const product = await prisma.product.findUnique({
+      where: { id: Number(req.params.pid) },
+      select: { photo: true }
+    });
+    if (product && product.photo) {
+      res.set("Content-type", 'image/*');
+      return res.status(200).send(product.photo);
     }
   } catch (error) {
     console.log(error);
@@ -128,7 +149,14 @@ export const productPhotoController = async (req, res) => {
 //delete controller
 export const deleteProductController = async (req, res) => {
   try {
-    await productModel.findByIdAndDelete(req.params.pid).select("-photo");
+    const product = await productModel.getProductById(Number(req.params.pid));
+    if (!product) {
+      return res.status(404).send({
+        success: false,
+        message: "Product not found",
+      });
+    }
+    await productModel.deleteProduct(Number(req.params.pid));
     res.status(200).send({
       success: true,
       message: "Product Deleted successfully",
@@ -167,16 +195,11 @@ export const updateProductController = async (req, res) => {
           .send({ error: "photo is Required and should be less then 1mb" });
     }
 
-    const products = await productModel.findByIdAndUpdate(
-      req.params.pid,
-      { ...req.fields, slug: slugify(name) },
-      { new: true }
-    );
-    if (photo) {
-      products.photo.data = fs.readFileSync(photo.path);
-      products.photo.contentType = photo.type;
-    }
-    await products.save();
+    const data = { ...req.fields, slug: slugify(name), price: Number(price), quantity: Number(quantity), categoryId: Number(category) };
+    if (photo) data.photo = fs.readFileSync(photo.path);
+    const products =     await prisma.product.delete({
+      where: { id: Number(req.params.pid) }
+    });
     res.status(201).send({
       success: true,
       message: "Product Updated Successfully",
@@ -196,19 +219,20 @@ export const updateProductController = async (req, res) => {
 export const productFiltersController = async (req, res) => {
   try {
     const { checked, radio } = req.body;
-    let args = {};
-    if (checked.length > 0) args.category = checked;
-    if (radio.length) args.price = { $gte: radio[0], $lte: radio[1] };
-    const products = await productModel.find(args);
+    const products = await productModel.filterProducts({
+      categoryIds: checked?.map(Number) || [],
+      priceRange: radio?.length ? { min: Number(radio[0]), max: Number(radio[1]) } : null
+    });
+    
     res.status(200).send({
       success: true,
-      products,
+      products: products.map(p => ({ ...p, photo: undefined })),
     });
   } catch (error) {
     console.log(error);
     res.status(400).send({
       success: false,
-      message: "Error WHile Filtering Products",
+      message: "Error While Filtering Products",
       error,
     });
   }
@@ -217,7 +241,7 @@ export const productFiltersController = async (req, res) => {
 // product count
 export const productCountController = async (req, res) => {
   try {
-    const total = await productModel.find({}).estimatedDocumentCount();
+    const total = await prisma.product.count();
     res.status(200).send({
       success: true,
       total,
@@ -237,15 +261,29 @@ export const productListController = async (req, res) => {
   try {
     const perPage = 6;
     const page = req.params.page ? req.params.page : 1;
-    const products = await productModel
-      .find({})
-      .select("-photo")
-      .skip((page - 1) * perPage)
-      .limit(perPage)
-      .sort({ createdAt: -1 });
+    const products = await prisma.product.findMany({
+      skip: (page - 1) * perPage,
+      take: perPage,
+      include: {
+        category: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        quantity: true,
+        shipping: true,
+        categoryId: true,
+        category: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
     res.status(200).send({
       success: true,
-      products,
+      products: pageItems,
     });
   } catch (error) {
     console.log(error);
@@ -261,15 +299,31 @@ export const productListController = async (req, res) => {
 export const searchProductController = async (req, res) => {
   try {
     const { keyword } = req.params;
-    const resutls = await productModel
-      .find({
-        $or: [
-          { name: { $regex: keyword, $options: "i" } },
-          { description: { $regex: keyword, $options: "i" } },
-        ],
-      })
-      .select("-photo");
-    res.json(resutls);
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          { name: { contains: keyword, mode: 'insensitive' } },
+          { description: { contains: keyword, mode: 'insensitive' } }
+        ]
+      },
+      include: {
+        category: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        quantity: true,
+        shipping: true,
+        categoryId: true,
+        category: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+    res.json(products);
   } catch (error) {
     console.log(error);
     res.status(400).send({
@@ -284,14 +338,31 @@ export const searchProductController = async (req, res) => {
 export const realtedProductController = async (req, res) => {
   try {
     const { pid, cid } = req.params;
-    const products = await productModel
-      .find({
-        category: cid,
-        _id: { $ne: pid },
-      })
-      .select("-photo")
-      .limit(3)
-      .populate("category");
+    const products = await prisma.product.findMany({
+      where: {
+        AND: [
+          { categoryId: Number(cid) },
+          { NOT: { id: Number(pid) } }
+        ]
+      },
+      take: 3,
+      include: {
+        category: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        quantity: true,
+        shipping: true,
+        categoryId: true,
+        category: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
     res.status(200).send({
       success: true,
       products,
@@ -309,12 +380,18 @@ export const realtedProductController = async (req, res) => {
 // get prdocyst by catgory
 export const productCategoryController = async (req, res) => {
   try {
-    const category = await categoryModel.findOne({ slug: req.params.slug });
-    const products = await productModel.find({ category }).populate("category");
+    const category = (await categoryModel.listCategories()).find(c => c.slug === req.params.slug);
+    if (!category) {
+      return res.status(404).send({
+        success: false,
+        message: "Category not found",
+      });
+    }
+    const products = await productModel.productsByCategory(category.id);
     res.status(200).send({
       success: true,
       category,
-      products,
+      products: products.map(p => ({ ...p, photo: undefined })),
     });
   } catch (error) {
     console.log(error);
@@ -347,9 +424,7 @@ export const brainTreePaymentController = async (req, res) => {
   try {
     const { nonce, cart } = req.body;
     let total = 0;
-    cart.map((i) => {
-      total += i.price;
-    });
+    cart.forEach((i) => { total += i.price; });
     let newTransaction = gateway.transaction.sale(
       {
         amount: total,
@@ -360,12 +435,29 @@ export const brainTreePaymentController = async (req, res) => {
       },
       function (error, result) {
         if (result) {
-          const order = new orderModel({
-            products: cart,
-            payment: result,
-            buyer: req.user._id,
-          }).save();
-          res.json({ ok: true });
+          // create order via prisma
+          prisma.order.create({
+            data: {
+              buyerId: req.user.id,
+              payment: result,
+              products: {
+                create: cart.map(c => ({
+                  product: { connect: { id: c.id } },
+                  quantity: c.quantity || 1
+                }))
+              }
+            },
+            include: {
+              products: {
+                include: {
+                  product: true
+                }
+              },
+              buyer: true
+            }
+          })
+            .then(created => res.json({ ok: true, order: created }))
+            .catch(err => { console.error(err); res.status(500).send(err); });
         } else {
           res.status(500).send(error);
         }
