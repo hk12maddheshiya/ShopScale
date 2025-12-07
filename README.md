@@ -101,6 +101,7 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
+```
 🚀 Getting Started
 Prerequisites
 Node.js v14 or higher
