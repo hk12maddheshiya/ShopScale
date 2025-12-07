@@ -102,83 +102,84 @@ model Product {
   updatedAt   DateTime    @updatedAt
 }
 ```
-🚀 Getting Started
-Prerequisites
-Node.js v14 or higher
+## 🚀 Getting Started
 
-PostgreSQL database
+### Prerequisites
+* Node.js v14 or higher
+* PostgreSQL database
+* npm or yarn
 
-npm or yarn
+### Installation Steps
 
-Installation Steps
-Clone the repository
+1.  **Clone the repository**
+    ```bash
+    git clone [https://github.com/hk12maddheshiya/ShopScale.git](https://github.com/hk12maddheshiya/ShopScale.git)
+    cd ShopScale
+    ```
 
-Bash
+2.  **Install dependencies**
+    ```bash
+    # Install backend dependencies
+    npm install
 
-git clone [https://github.com/hk12maddheshiya/ShopScale.git](https://github.com/hk12maddheshiya/ShopScale.git)
-cd ShopScale
-Install dependencies
+    # Install frontend dependencies
+    cd client
+    npm install
+    ```
 
-Bash
+3.  **Configure environment variables**
+    Create a `.env` file in the root directory and add:
+    ```env
+    DATABASE_URL="postgresql://user:password@localhost:5432/shopscale_db"
+    JWT_SECRET=your_jwt_secret
+    BRAINTREE_MERCHANT_ID=your_merchant_id
+    BRAINTREE_PUBLIC_KEY=your_public_key
+    BRAINTREE_PRIVATE_KEY=your_private_key
+    ```
 
-# Install backend dependencies
-npm install
+4.  **Set up the database**
+    ```bash
+    # Run Prisma migrations
+    npx prisma migrate dev
 
-# Install frontend dependencies
-cd client
-npm install
-Configure environment variables Create a .env file in the root directory and add:
+    # Generate Prisma Client
+    npx prisma generate
+    ```
 
-Code snippet
+5.  **Start the development servers**
+    ```bash
+    # Start backend (from root directory)
+    npm run dev
 
-DATABASE_URL="postgresql://user:password@localhost:5432/shopscale_db"
-JWT_SECRET=your_jwt_secret
-BRAINTREE_MERCHANT_ID=your_merchant_id
-BRAINTREE_PUBLIC_KEY=your_public_key
-BRAINTREE_PRIVATE_KEY=your_private_key
-Set up the database
+    # Start frontend (from client directory)
+    cd client
+    npm start
+    ```
 
-Bash
+## 🔄 Recent Updates
 
-# Run Prisma migrations
-npx prisma migrate dev
+### Database Features
+* PostgreSQL with Prisma ORM for robust data management.
+* Implemented proper database relations.
+* Enhanced query performance with Prisma Client.
+* Added type safety with Prisma's generated types.
 
-# Generate Prisma Client
-npx prisma generate
-Start the development servers
+### API Improvements
+* Added pagination for product listings.
+* Enhanced search functionality.
+* Improved error handling and validation.
 
-Bash
+## 📜 License
 
-# Start backend (from root directory)
-npm run dev
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-# Start frontend (from client directory)
-cd client
-npm start
-🔄 Recent Updates
-Database Features
-PostgreSQL with Prisma ORM for robust data management.
+## 🤝 Contributing
 
-Implemented proper database relations.
-
-Enhanced query performance with Prisma Client.
-
-Added type safety with Prisma's generated types.
-
-API Improvements
-Added pagination for product listings.
-
-Enhanced search functionality.
-
-Improved error handling and validation.
-
-📜 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-🤝 Contributing
-Fork the repository
-
-Create your feature branch (git checkout -b feature/AmazingFeature)
+1.  Fork the repository
+2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
 
 Commit your changes (git commit -m 'Add some AmazingFeature')
 
