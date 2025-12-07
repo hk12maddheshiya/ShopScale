@@ -7,9 +7,8 @@
 ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/bootstrap-%238511FA.svg?style=for-the-badge&logo=bootstrap&logoColor=white)
 
-**A scalable, full-stack e-commerce architecture engineered for performance and reliability.**
+**A full-stack e-commerce platform built for performance and scalability.**
 
 [View Demo](https://your-demo-link.com) · [Report Bug](https://github.com/hk12maddheshiya/ShopScale/issues) · [Request Feature](https://github.com/hk12maddheshiya/ShopScale/issues)
 
@@ -19,45 +18,50 @@
 
 ## 📖 Overview
 
-**ShopScale** is a robust e-commerce platform built to demonstrate modern full-stack development practices. It leverages the power of **React** for a dynamic frontend and **Node.js/Express** for a high-performance backend. Data integrity is managed via **PostgreSQL** and **Prisma ORM**, ensuring type-safe database queries and efficient relation handling.
+**ShopScale** is a robust e-commerce application built using **React, Node.js, and PostgreSQL** with **Prisma ORM**. It provides a complete shopping experience with secure user authentication, complex product management, real-time cart functionality, and integrated payment processing.
 
-Designed with scalability in mind, ShopScale includes secure authentication, complex product filtering, cart state management, and an integrated payment gateway.
+## 🚀 Features
 
-## 🚀 Key Features
+### User Features
+* **Product Browsing:**
+    * Browse all products with advanced filtering.
+    * Search products by name and description.
+    * Filter by category and price range.
+    * Responsive product image gallery.
+* **Shopping Experience:**
+    * Add products to cart with real-time total calculation.
+    * Adjust quantities and manage cart state.
+    * Secure checkout process.
+* **User Account:**
+    * JWT-based authentication.
+    * Profile management and order history.
+    * Password reset functionality.
 
-### 👤 Customer Experience
-* **Advanced Product Discovery:** Real-time search by name/description, filtered by category, and price range sorting.
-* **Smart Cart System:** Real-time state management for cart additions, quantity adjustments, and total calculations.
-* **Secure Checkout:** Integrated **Braintree** payment gateway for safe and seamless transactions.
-* **User Dashboard:** Comprehensive profile management, order history tracking, and address management.
-* **Authentication:** Secure JWT-based login/signup system with password reset capabilities.
+### Admin Features
+* **Product Management:** Create, update, and manage inventory/images.
+* **Category Management:** Organize products via dynamic categories.
+* **Order Management:** Track payment status, update order process, and handle refunds.
 
-### 🛡️ Admin Dashboard
-* **Inventory Control:** Create, update, and manage product stock and details.
-* **Category Management:** Dynamic organization of products via category assignment.
-* **Order Fulfillment:** View all incoming orders, update processing status, and manage refunds.
-* **Visual Management:** Direct image uploads and gallery management for products.
+## 💻 Technical Stack
 
-## 💻 Tech Stack
+### Frontend
+* **Framework:** React.js
+* **State Management:** Context API
+* **Styling:** Bootstrap
+* **HTTP Client:** Axios
 
-| Component | Technology | Description |
-| :--- | :--- | :--- |
-| **Frontend** | React.js | Component-based UI architecture |
-| **State** | Context API | Global state management for User & Cart |
-| **Styling** | Bootstrap | Responsive layout and UI components |
-| **Backend** | Node.js & Express | Scalable RESTful API architecture |
-| **Database** | PostgreSQL | Relational database system |
-| **ORM** | Prisma | Type-safe database client & schema management |
-| **Auth** | JWT | Stateless authentication mechanism |
-| **Payments** | Braintree | Secure payment processing integration |
+### Backend
+* **Runtime:** Node.js
+* **Framework:** Express.js
+* **Database:** PostgreSQL
+* **ORM:** Prisma
+* **Authentication:** JWT (JSON Web Tokens)
+* **File Upload:** Express-formidable
+* **Payment:** Braintree integration
 
-## 🗄️ Database Schema
+## 📝 Database Schema
 
-ShopScale uses a relational schema optimized for e-commerce. Below are the core Prisma models:
-
-<details>
-<summary><b>Click to view User Model</b></summary>
-
+### User Model
 ```prisma
 model User {
   id        Int      @id @default(autoincrement())
@@ -67,15 +71,12 @@ model User {
   phone     String
   address   Json
   answer    String
-  role      Int      @default(0) // 0 = User, 1 = Admin
+  role      Int      @default(0)
   orders    Order[]  @relation("BuyerOrders")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-</details>
-
-<details> <summary><b>Click to view Product & Category Models</b></summary>
-
+Product & Category Models
 Code snippet
 
 model Category {
@@ -100,15 +101,11 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
-</details>
-
-🛠️ Getting Started
-Follow these steps to set up the project locally.
-
+🚀 Getting Started
 Prerequisites
-Node.js (v14+)
+Node.js v14 or higher
 
-PostgreSQL installed and running
+PostgreSQL database
 
 npm or yarn
 
@@ -119,70 +116,71 @@ Bash
 
 git clone [https://github.com/hk12maddheshiya/ShopScale.git](https://github.com/hk12maddheshiya/ShopScale.git)
 cd ShopScale
-Install Backend Dependencies
+Install dependencies
 
 Bash
 
+# Install backend dependencies
 npm install
-Install Frontend Dependencies
 
-Bash
-
+# Install frontend dependencies
 cd client
 npm install
-cd ..
-Environment Configuration Create a .env file in the root directory and add your credentials:
+Configure environment variables Create a .env file in the root directory and add:
 
 Code snippet
 
-PORT=8080
 DATABASE_URL="postgresql://user:password@localhost:5432/shopscale_db"
-JWT_SECRET=your_secure_jwt_secret
-BRAINTREE_MERCHANT_ID=your_id
+JWT_SECRET=your_jwt_secret
+BRAINTREE_MERCHANT_ID=your_merchant_id
 BRAINTREE_PUBLIC_KEY=your_public_key
 BRAINTREE_PRIVATE_KEY=your_private_key
-Database Setup
+Set up the database
 
 Bash
 
-# Run migrations to create tables
-npx prisma migrate dev --name init
+# Run Prisma migrations
+npx prisma migrate dev
 
 # Generate Prisma Client
 npx prisma generate
-Run the Application
-
-Option A: Run concurrently (Recommended)
+Start the development servers
 
 Bash
 
+# Start backend (from root directory)
 npm run dev
-Option B: Run separately
 
-Terminal 1 (Backend): npm run server
+# Start frontend (from client directory)
+cd client
+npm start
+🔄 Recent Updates
+Database Features
+PostgreSQL with Prisma ORM for robust data management.
 
-Terminal 2 (Frontend): cd client && npm start
+Implemented proper database relations.
 
-🔄 Recent Updates & Roadmap
-[x] Migration to PostgreSQL: Moved from MongoDB to PostgreSQL for better relational data handling.
+Enhanced query performance with Prisma Client.
 
-[x] Prisma Integration: Implemented Prisma ORM for type safety.
+Added type safety with Prisma's generated types.
 
-[x] Pagination: Added server-side pagination for product feeds.
+API Improvements
+Added pagination for product listings.
 
-[x] Performance: Implemented debouncing for search queries.
+Enhanced search functionality.
 
-[ ] Redis Caching: Planned integration for faster product retrieval.
+Improved error handling and validation.
+
+📜 License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 🤝 Contributing
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+Fork the repository
 
-Fork the Project
+Create your feature branch (git checkout -b feature/AmazingFeature)
 
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
+Commit your changes (git commit -m 'Add some AmazingFeature')
 
-Commit your Changes (git commit -m 'Add some AmazingFeature')
-
-Push to the Branch (git push origin feature/AmazingFeature)
+Push to the branch (git push origin feature/AmazingFeature)
 
 Open a Pull Request
